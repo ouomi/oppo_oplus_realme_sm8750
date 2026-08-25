@@ -7,7 +7,8 @@ env:
   SUB_VERSION: '66'
   KERNEL_NAME: 'android15-8-g29d86c5fc9dd-abogki428889875-4k'
   CCACHE_KEY: ccache-ecsv4-6.6.66
-  PIN_KSU_VERSION: 'v3.2.4'
+  KSU_VERSION_TAG: 'v3.2.5'
+  KSU_COMMIT: 'b0bc817b4e966aa6aa830834eaf6ef765d821d40'
 
 on:
   workflow_dispatch:
@@ -252,12 +253,13 @@ jobs:
           # 进入内核工作目录
           cd kernel_workspace
           if [[ ${{ github.event.inputs.ksu_type }} == "sukisu" || ${{ github.event.inputs.ksu_type }} == "resukisu" ]]; then
-            echo "正在配置ReSukiSU（由于SukiSU长期未维护无法正常编译，且ReSukiSU兼容sukisu管理器，故SukiSU源码仓库已重定向为resukisu）..."
-            curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/tags/${{ env.PIN_KSU_VERSION }}/kernel/setup.sh" | bash -s ${{ env.PIN_KSU_VERSION }}
+            echo "正在配置官方 KernelSU v3.2.5（对应 KernelSU 版本 32525）..."
+            curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/${{ env.KSU_COMMIT }}/kernel/setup.sh" | bash -s ${{ env.KSU_COMMIT }}
             echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@cctv18"' >> ./common/arch/arm64/configs/gki_defconfig
             cd ./KernelSU
-            test "$(git describe --tags --exact-match 2>/dev/null)" = "${{ env.PIN_KSU_VERSION }}"
-            echo "ReSukiSU版本：$(git describe --tags --exact-match)"
+            test "$(git rev-parse HEAD)" = "${{ env.KSU_COMMIT }}"
+            echo "KernelSU版本：${{ env.KSU_VERSION_TAG }}"
+            echo "KernelSU commit：$(git rev-parse HEAD)"
             # 生成自定义版本号（基于提交计数）, 失败时使用 114514
             KSU_VERSION=$(expr $(git rev-list --count HEAD) + 30700 2>/dev/null || echo 114514)
             # 存储版本号到 GitHub 环境变量
